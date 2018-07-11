@@ -1,0 +1,8 @@
+spring:
+  redis:
+    host: localhost
+    port: 6379
+
+  config:
+    baseurl: localhost:8080
+    keylength: 6
