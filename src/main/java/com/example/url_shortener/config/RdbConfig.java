@@ -13,6 +13,4 @@ public class RdbConfig {
     @Value("${spring.h2.console.path}")
     private String h2URL;
 
-
-//    @Beane
 }
