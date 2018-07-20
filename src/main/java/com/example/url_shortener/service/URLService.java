@@ -5,6 +5,7 @@ import com.example.url_shortener.model.UrlVO;
 import com.example.url_shortener.repository.H2Repository;
 import com.example.url_shortener.repository.URLRedisRepository;
 import com.example.url_shortener.util.Base62;
+import io.lettuce.core.api.StatefulRedisConnection;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +22,8 @@ public class URLService {
     URLRedisRepository urlRedisRepository;
     @Autowired
     H2Repository r2Repository;
+    @Autowired
+    private StatefulRedisConnection<String, String> redisConnection;
 
     private static final Logger logger = LoggerFactory.getLogger(URLService.class);
 
@@ -36,7 +39,7 @@ public class URLService {
         } else {
             vo.setShortUrl(Base62.toBase62(vo.getLongURL()));
             r2Repository.save(new UrlVO(longURL,vo.getShortUrl()));
-            urlRedisRepository.save(vo);
+            redisConnection.sync().setex(vo.getShortUrl(), 100, longURL);
             logger.info("Insert new Data in redis, R2");
         }
 
@@ -44,20 +47,18 @@ public class URLService {
     }
 
     public String getURL(String shortURL){
-        Optional<URLRequest> o = urlRedisRepository.findById(shortURL);
-        if(o.isPresent()) return o.get().getLongURL();
+        String longURL = redisConnection.sync().get(shortURL);
+        if(longURL!=null) return longURL;
         else {
             UrlVO vo = r2Repository.findByShortURL(shortURL);
             if (vo == null) {
-                return "";
+                return "저장된 값이 없습니다.";
             } else {
-                return "no";
+                logger.info("set Expiretime");
+                redisConnection.sync().setex(vo.getShortURL(), 100, vo.getLongURL());
+                return vo.getLongURL();
             }
 
-            //rdb에서 조회
-            //if rdb에 없을 경우 return "";
-            //if 있을 경우
-            //redis expiretime 부여 및 리턴
         }
 
     }
