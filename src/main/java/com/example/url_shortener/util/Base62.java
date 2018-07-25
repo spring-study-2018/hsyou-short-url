@@ -8,7 +8,18 @@ public class Base62 {
 
 	private Base62() {}
 
-	public static String fromBase10(long i) {
+	public static String toBase62(String longURL) {
+		long n = 0;
+		char[] chars = longURL.toCharArray();
+
+		for(int i= chars.length-1; i>= 0; i--) {
+			n+=ALPHABET.indexOf(chars[i]) * (int) Math.pow(62, i);
+		}
+		return fromBase10(n);
+
+	}
+
+	private static String fromBase10(long i) {
 		StringBuilder sb = new StringBuilder("");
 		if (i == 0) {
 			return "a";
@@ -25,7 +36,7 @@ public class Base62 {
 		return i / BASE;
 	}
 
-	public static long toBase10(String str) {
+	private static long toBase10(String str) {
 		return toBase10(new StringBuilder(str).reverse().toString().toCharArray());
 	}
 

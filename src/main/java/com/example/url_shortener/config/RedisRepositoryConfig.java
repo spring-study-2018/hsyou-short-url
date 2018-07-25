@@ -1,6 +1,9 @@
 package com.example.url_shortener.config;
 
 
+import io.lettuce.core.RedisClient;
+import io.lettuce.core.RedisURI;
+import io.lettuce.core.api.StatefulRedisConnection;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,14 +22,8 @@ public class RedisRepositoryConfig {
     private int redisPort;
 
     @Bean
-    public RedisConnectionFactory redisConnectionFactory() {
-        return new LettuceConnectionFactory(redisHost, redisPort);
-    }
-
-    @Bean
-    public RedisTemplate<?, ?> redisTemplate() {
-        RedisTemplate<byte[], byte[]> redisTemplate = new RedisTemplate<>();
-        redisTemplate.setConnectionFactory(redisConnectionFactory());
-        return redisTemplate;
+    public StatefulRedisConnection<String, String> redisConnection(){
+        RedisClient client = RedisClient.create(RedisURI.Builder.redis(redisHost, redisPort).build());
+        return client.connect();
     }
 }
